@@ -19,7 +19,6 @@ export const useAuth = () => {
 
         if (data.token) {
           localStorage.setItem("auth_token", data.token)
-          localStorage.setItem("user_data", JSON.stringify(data))
           router.push("/dashboard")
           return { success: true }
         } else {
@@ -38,7 +37,6 @@ export const useAuth = () => {
 
   const logout = useCallback(() => {
     localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_data")
     router.push("/login")
   }, [router])
 

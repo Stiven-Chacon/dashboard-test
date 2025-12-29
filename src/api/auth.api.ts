@@ -21,12 +21,14 @@ export const authApi = {
       body: JSON.stringify(credentials),
     })
 
-    const data = await response.json()
-
     if (!response.ok) {
-      throw new Error(data.message || "Error de autenticación")
+      throw new Error("Error de autenticación")
     }
 
-    return data
+    const token = await response.text()
+
+    return {
+      token: token.trim(), // Eliminar espacios en blanco si los hay
+    }
   },
 }
