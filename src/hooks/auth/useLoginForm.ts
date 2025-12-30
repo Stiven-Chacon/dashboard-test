@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { validateLogin } from "@/src/utils/validators"
-import { useAuth } from "@/src/hooks/useAuth"
+import { useAuth } from "@/src/hooks/auth/useAuth"
 
 export function useLoginForm() {
   const [email, setEmail] = useState("")
