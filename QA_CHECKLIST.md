@@ -11,7 +11,7 @@
 - ✅ Login con credenciales inválidas → Error mostrado, acceso denegado
 
 ### 2. Listado de Categorías
-- ✅ Carga de categorías → 48 categorías cargadas en ~800ms con paginación funcional
+- ✅ Carga de categorías → 50 categorías cargadas en ~800ms con paginación funcional
 - ✅ Estado vacío → Mensaje "No hay categorías" y botón "Crear" visible
 - ✅ Error del servidor → Mensaje de error con opciones "Reintentar" y "Data de prueba"
 
@@ -20,13 +20,13 @@
 - ✅ Cambiar tamaño de página → 10/20/50 items por página, resetea a página 1
 
 ### 4. Búsqueda
-- ✅ Búsqueda por nombre/descripción → Filtrado en tiempo real, case-insensitive
+- ✅ Búsqueda por nombre → Filtrado en tiempo real, case-insensitive
 - ✅ Limpiar búsqueda → Botón X limpia y muestra todas las categorías
 - ✅ Sin resultados → Estado vacío con mensaje y opción de limpiar
 
 ### 5. Filtros
-- ✅ Filtro por estado (Activo/Inactivo) → 35 activas, 13 inactivas filtradas correctamente
-- ✅ Filtro por rango de fechas → Filtra Q1-Q2 2024 (18 resultados)
+- ✅ Filtro por estado (Activo/Inactivo) → 44 activas, 6 inactivas filtradas correctamente
+- ✅ Filtro por rango de fechas → Filtra Q1-Q2 2025 (50 resultados)
 - ✅ Combinar búsqueda + filtros → Lógica AND aplicada correctamente
 - ✅ Limpiar filtros → Reset completo, indicador desaparece
 
@@ -36,7 +36,6 @@
 - ✅ Validación de imagen → Rechaza archivos >5MB y formatos inválidos
 - ✅ Preview de imagen → Aparece correctamente con opción de remover (botón X)
 - ✅ Toggle de estado → Color #01BABB (activo), animación suave, envía status correcto
-- ✅ Auto-formato de color → "#f00" se convierte en "#FF0000"
 
 ### 7. Editar Categoría
 - ✅ Cargar datos → Campos pre-llenados correctamente con datos existentes
