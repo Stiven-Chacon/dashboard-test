@@ -23,6 +23,10 @@ export interface CreateCategoryPayload {
   description: string
   color?: string
   imageFile?: File
+  // Campos adicionales para edición
+  id?: string
+  icon?: string
+  status?: number
 }
 
 const API_BASE_URL = "/api/proxy"
@@ -55,6 +59,10 @@ export const categoriesApi = {
   create: async (payload: CreateCategoryPayload): Promise<Category> => {
     const token = localStorage.getItem("auth_token")
     
+    if (!token) {
+      throw new Error("No hay token de autenticación")
+    }
+
     const body = payload.imageFile
       ? createFormData(payload)
       : JSON.stringify(payload)
@@ -74,7 +82,8 @@ export const categoriesApi = {
     })
 
     if (!response.ok) {
-      throw new Error("Error al crear la categoría")
+      const errorData = await response.json().catch(() => null)
+      throw new Error(errorData?.message || "Error al crear la categoría")
     }
 
     return await response.json()
@@ -92,6 +101,19 @@ function createFormData(payload: CreateCategoryPayload): FormData {
   
   if (payload.imageFile) {
     formData.append("imageFile", payload.imageFile)
+  }
+
+  // Campos adicionales para edición
+  if (payload.id) {
+    formData.append("id", payload.id)
+  }
+
+  if (payload.icon) {
+    formData.append("icon", payload.icon)
+  }
+
+  if (payload.status !== undefined) {
+    formData.append("status", payload.status.toString())
   }
 
   return formData
