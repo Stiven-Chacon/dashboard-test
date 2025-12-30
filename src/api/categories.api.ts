@@ -63,7 +63,9 @@ export const categoriesApi = {
       throw new Error("No hay token de autenticación")
     }
 
-    const body = payload.imageFile
+    const useFormData = !!payload.imageFile
+    
+    const body = useFormData
       ? createFormData(payload)
       : JSON.stringify(payload)
 
@@ -71,7 +73,7 @@ export const categoriesApi = {
       Authorization: `Bearer ${token}`,
     }
 
-    if (!payload.imageFile) {
+    if (!useFormData) {
       headers["Content-Type"] = "application/json"
     }
 
@@ -101,19 +103,16 @@ function createFormData(payload: CreateCategoryPayload): FormData {
   
   if (payload.imageFile) {
     formData.append("imageFile", payload.imageFile)
-  }
-
-  // Campos adicionales para edición
-  if (payload.id) {
-    formData.append("id", payload.id)
-  }
-
-  if (payload.icon) {
+  } else if (payload.icon) {
     formData.append("icon", payload.icon)
   }
 
   if (payload.status !== undefined) {
     formData.append("status", payload.status.toString())
+  }
+
+  if (payload.id) {
+    formData.append("id", payload.id)
   }
 
   return formData
