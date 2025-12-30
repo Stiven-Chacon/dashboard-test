@@ -1,7 +1,7 @@
 "use client"
 
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
-import { useLoginForm } from "@/src/hooks/useLoginForm"
+import { useLoginForm } from "@/src/hooks/auth/useLoginForm"
 
 export default function LoginForm() {
   const {
