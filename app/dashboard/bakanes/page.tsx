@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useCategories } from "@/src/hooks/auth/dashboard/bakanes/useCategories"
+import CategoryModal from "@/src/components/dashboard/CategoryModal"
+import type { Category } from "@/src/api/categories.api"
+import { mockCategoriesData } from "@/src/data/mockCategoriesData"
 import {
   Search,
   Filter,
@@ -15,6 +18,7 @@ import {
   Loader2,
   AlertCircle,
   Plus,
+  Code,
 } from "lucide-react"
 
 const TABS = [
@@ -28,6 +32,9 @@ export default function CategoriesTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [showDebugData, setShowDebugData] = useState(false)
 
   const { data, isLoading, error, fetchCategories } = useCategories()
 
@@ -44,11 +51,39 @@ export default function CategoriesTable() {
     setCurrentPage(1)
   }
 
+  const handleCreate = () => {
+    setSelectedCategory(null)
+    setIsModalOpen(true)
+  }
+
+  const handleEdit = (category: Category) => {
+    setSelectedCategory(category)
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setSelectedCategory(null)
+  }
+
+  const handleSuccess = () => {
+    fetchCategories(currentPage, pageSize)
+  }
+
+  const toggleDebugData = () => {
+    setShowDebugData(!showDebugData)
+  }
+
+  // Use mock data if debug mode is enabled, otherwise use real data
+  const categories = showDebugData ? mockCategoriesData.data.data : (data?.data?.data || [])
+  const totalPages = showDebugData ? mockCategoriesData.data.totalPages : (data?.data?.totalPages || 0)
+  const totalElements = showDebugData ? mockCategoriesData.data.totalElements : (data?.data?.totalElements || 0)
+
   // Loading State
-  if (isLoading) {
+  if (isLoading && !showDebugData) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Categorías</h1>
+      <div className="max-w-7xl mx-auto px-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Categorías</h1>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
@@ -57,10 +92,19 @@ export default function CategoriesTable() {
   }
 
   // Error State
-  if (error) {
+  if (error && !showDebugData) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Categorías</h1>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categorías</h1>
+          <button
+            onClick={toggleDebugData}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+          >
+            <Code className="w-4 h-4" />
+            Data de prueba
+          </button>
+        </div>
         <div className="flex flex-col items-center justify-center h-64 bg-red-50 rounded-lg border border-red-200">
           <AlertCircle className="w-12 h-12 text-red-600 mb-4" />
           <p className="text-red-800 font-bold text-xl mb-2">¡Ups! Error en el servidor</p>
@@ -77,25 +121,41 @@ export default function CategoriesTable() {
   }
 
   // Empty State
-  const categories = data?.data?.data || []
-  const totalPages = data?.data?.totalPages || 0
-  const totalElements = data?.data?.totalElements || 0
-
-  if (categories.length === 0) {
+  if (categories.length === 0 && !showDebugData) {
     return (
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Categorías</h1>
-        <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-            <Plus className="w-8 h-8 text-gray-400" />
+      <>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categorías</h1>
+            <button
+              onClick={toggleDebugData}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+            >
+              <Code className="w-4 h-4" />
+              Data de prueba
+            </button>
           </div>
-          <p className="text-gray-600 font-medium mb-2">No hay categorías</p>
-          <p className="text-gray-500 text-sm mb-4">Comienza creando tu primera categoría</p>
-          <button className="px-4 py-2 bg-[#1E1B4D] text-white rounded-lg hover:bg-[#16132e] transition-colors">
-            Crear categoría
-          </button>
+          <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+              <Plus className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-medium mb-2">No hay categorías</p>
+            <p className="text-gray-500 text-sm mb-4">Comienza creando tu primera categoría</p>
+            <button 
+              onClick={handleCreate}
+              className="px-4 py-2 bg-[#1E1B4D] text-white rounded-lg hover:bg-[#16132e] transition-colors"
+            >
+              Crear categoría
+            </button>
+          </div>
         </div>
-      </div>
+        <CategoryModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          category={selectedCategory}
+          onSuccess={handleSuccess}
+        />
+      </>
     )
   }
 
@@ -103,197 +163,345 @@ export default function CategoriesTable() {
   const endIndex = Math.min(currentPage * pageSize, totalElements)
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Categorías</h1>
-
-      {/* Tabs */}
-      <div className="flex gap-8 border-b border-gray-200 mb-6">
-        {TABS.map((tab) => (
+    <>
+      <div className="max-w-7xl mx-auto px-4 flex flex-col">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-4 flex-shrink-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categorías</h1>
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`pb-3 text-sm font-medium transition-colors relative ${
-              activeTab === tab.id
-                ? "text-gray-900"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            onClick={toggleDebugData}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium w-full sm:w-auto justify-center"
           >
-            {tab.label}
-            {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900" />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Search and Actions */}
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-            />
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-            <Filter className="w-4 h-4" />
-            Filtros
+            <Code className="w-4 h-4" />
+            {showDebugData ? "Usar data real" : "Data de prueba"}
           </button>
         </div>
-        <button className="px-4 py-2 bg-[#1E1B4D] text-white rounded-lg hover:bg-[#16132e] transition-colors text-sm font-medium">
-          Crear categoría
-        </button>
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Nombre de la categoría
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Ícono
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Descripción
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Fecha de creación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {category.name}
-                  </td>
-                  <td className="px-6 py-4">
+        {/* Tabs */}
+        <div className="flex gap-4 md:gap-8 border-b border-gray-200 mb-4 md:mb-6 flex-shrink-0 overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                activeTab === tab.id
+                  ? "text-gray-900"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Search and Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-4 md:mb-6 gap-4 flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1E1B4D]" />
+              <input
+                type="text"
+                placeholder="Buscar"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E1B4D] focus:border-[#1E1B4D] outline-none text-sm text-[#1E1B4D] placeholder:text-[#1E1B4D]"
+              />
+            </div>
+            <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-[#1E1B4D]">
+              <Filter className="w-4 h-4" />
+              Filtros
+            </button>
+          </div>
+          <button 
+            onClick={handleCreate}
+            className="px-4 py-2 bg-[#1E1B4D] text-white rounded-lg hover:bg-[#16132e] transition-colors text-sm font-medium w-full sm:w-auto"
+          >
+            Crear categoría
+          </button>
+        </div>
+
+        {/* Table for Desktop - Cards for Mobile */}
+        <div className="flex-1 mb-6">
+          {/* Desktop Table View */}
+          <div className="hidden md:flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden max-h-[calc(100vh-350px)]">
+            <div className="overflow-auto flex-1">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Nombre de la categoría
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Ícono
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Descripción
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Fecha de creación
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {categories.map((category) => (
+                    <tr key={category.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {category.name}
+                      </td>
+                      <td className="px-6 py-4">
+                        <img
+                          src={category.icon}
+                          alt={category.name}
+                          className="w-10 h-10 rounded-lg object-cover"
+                          style={{ backgroundColor: category.color }}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            category.status === 1
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {category.status === 1 ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                        {category.description}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(category.createdAt).toLocaleDateString("es-ES", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEdit(category)}
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            aria-label="Editar"
+                          >
+                            <Edit className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            aria-label="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            aria-label="Enlazar"
+                          >
+                            <LinkIcon className="w-4 h-4 text-gray-600" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination for Desktop */}
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4 flex-shrink-0 bg-white">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Resultados por página</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="border border-gray-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  {startIndex} - {endIndex} de {totalElements}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Primera página"
+                  >
+                    <ChevronsLeft className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage >= totalPages}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Última página"
+                  >
+                    <ChevronsRight className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="md:hidden flex flex-col gap-4 max-h-[calc(100vh-350px)] overflow-auto pb-4">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="bg-white rounded-lg border border-gray-200 p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
                     <img
                       src={category.icon}
                       alt={category.name}
-                      className="w-10 h-10 rounded-lg object-cover"
+                      className="w-12 h-12 rounded-lg object-cover"
                       style={{ backgroundColor: category.color }}
                     />
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        category.status === 1
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {category.status === 1 ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                    {category.description}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{category.name}</h3>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          category.status === 1
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {category.status === 1 ? "Activo" : "Inactivo"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-600">{category.description}</p>
+
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span className="text-xs text-gray-500">
                     {new Date(category.createdAt).toLocaleDateString("es-ES", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                     })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="p-1 hover:bg-gray-100 rounded transition-colors"
-                        aria-label="Editar"
-                      >
-                        <Edit className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        className="p-1 hover:bg-gray-100 rounded transition-colors"
-                        aria-label="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        className="p-1 hover:bg-gray-100 rounded transition-colors"
-                        aria-label="Enlazar"
-                      >
-                        <LinkIcon className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEdit(category)}
+                      className="p-2 hover:bg-gray-100 rounded transition-colors"
+                      aria-label="Editar"
+                    >
+                      <Edit className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      className="p-2 hover:bg-gray-100 rounded transition-colors"
+                      aria-label="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      className="p-2 hover:bg-gray-100 rounded transition-colors"
+                      aria-label="Enlazar"
+                    >
+                      <LinkIcon className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
 
-        {/* Pagination */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>Resultados por página</span>
-            <select
-              value={pageSize}
-              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              {startIndex} - {endIndex} de {totalElements}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage === 1}
-                className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Primera página"
-              >
-                <ChevronsLeft className="w-4 h-4 text-gray-600" />
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Página anterior"
-              >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Página siguiente"
-              >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              </button>
-              <button
-                onClick={() => handlePageChange(totalPages)}
-                disabled={currentPage >= totalPages}
-                className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Última página"
-              >
-                <ChevronsRight className="w-4 h-4 text-gray-600" />
-              </button>
+            {/* Mobile Pagination */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mt-auto flex-shrink-0">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {startIndex} - {endIndex} de {totalElements}
+                  </span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Primera página"
+                  >
+                    <ChevronsLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <span className="px-4 py-1 text-sm font-medium text-gray-700">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage >= totalPages}
+                    className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Última página"
+                  >
+                    <ChevronsRight className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <CategoryModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        category={selectedCategory}
+        onSuccess={handleSuccess}
+      />
+    </>
   )
 }
