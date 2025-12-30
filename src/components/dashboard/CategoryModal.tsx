@@ -154,6 +154,15 @@ export default function CategoryModal({
 
     const isEditMode = !!category
 
+    // Validación ESTRICTA: en creación la imagen es OBLIGATORIA
+    if (!isEditMode && !imageFile) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        imageFile: "La imagen es obligatoria para crear una categoría",
+      }))
+      return
+    }
+
     // Validar formulario
     const formData = {
       name,
@@ -180,22 +189,14 @@ export default function CategoryModal({
       // Modo edición: enviar todos los campos
       payload.id = category.id
       payload.status = isActive ? 1 : 0
-      
       // Solo enviar imageFile si hay una nueva imagen
       if (imageFile) {
         payload.imageFile = imageFile
       }
     } else {
-      // Modo creación: imagen es obligatoria
-      if (!imageFile) {
-        setValidationErrors((prev) => ({
-          ...prev,
-          imageFile: "La imagen es obligatoria",
-        }))
-        return
-      }
+      // Modo creación: imageFile ya validado arriba
       payload.imageFile = imageFile
-      payload.status = 1 // Por defecto activo en creación
+      payload.status = 1
     }
 
     const result = await createCategory(payload)

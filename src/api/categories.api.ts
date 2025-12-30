@@ -62,10 +62,9 @@ export const categoriesApi = {
       throw new Error("No hay token de autenticación")
     }
 
-    // SIEMPRE usar FormData - el backend NO acepta JSON
-    const formData = createFormData(payload)
+    const isEditMode = !!payload.id
+    const formData = createFormData(payload, isEditMode)
 
-    // NO incluir Content-Type - el navegador lo establece automáticamente
     const headers: HeadersInit = {
       Authorization: `Bearer ${token}`,
     }
@@ -78,14 +77,14 @@ export const categoriesApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null)
-      throw new Error(errorData?.message || "Error al crear la categoría")
+      throw new Error(errorData?.message || `Error al ${isEditMode ? 'actualizar' : 'crear'} la categoría`)
     }
 
     return await response.json()
   },
 }
 
-function createFormData(payload: CreateCategoryPayload): FormData {
+function createFormData(payload: CreateCategoryPayload, isEditMode: boolean): FormData {
   const formData = new FormData()
   formData.append("name", payload.name)
   formData.append("description", payload.description)
@@ -94,16 +93,23 @@ function createFormData(payload: CreateCategoryPayload): FormData {
     formData.append("color", payload.color)
   }
   
-  if (payload.imageFile instanceof File) {
-    formData.append("imageFile", payload.imageFile)
-  }
-
   if (payload.status !== undefined) {
     formData.append("status", payload.status.toString())
   }
 
-  if (payload.id) {
+  if (isEditMode && payload.id) {
     formData.append("id", payload.id)
+  }
+
+
+  if (payload.imageFile instanceof File) {
+    formData.append("icon", payload.imageFile)
+  } else if (isEditMode) {
+    const emptyBlob = new Blob([], { type: "application/octet-stream" })
+    formData.append("icon", emptyBlob, "keep-existing.tmp")
+  } else {
+    const emptyBlob = new Blob([], { type: "application/octet-stream" })
+    formData.append("icon", emptyBlob, "empty.tmp")
   }
 
   return formData
