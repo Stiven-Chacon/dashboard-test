@@ -63,24 +63,18 @@ export const categoriesApi = {
       throw new Error("No hay token de autenticación")
     }
 
-    const useFormData = !!payload.imageFile
-    
-    const body = useFormData
-      ? createFormData(payload)
-      : JSON.stringify(payload)
+    // SIEMPRE usar FormData - el backend NO acepta JSON
+    const formData = createFormData(payload)
 
+    // NO incluir Content-Type - el navegador lo establece automáticamente
     const headers: HeadersInit = {
       Authorization: `Bearer ${token}`,
-    }
-
-    if (!useFormData) {
-      headers["Content-Type"] = "application/json"
     }
 
     const response = await fetch(`${API_BASE_URL}/actions/admin-add`, {
       method: "POST",
       headers,
-      body,
+      body: formData,
     })
 
     if (!response.ok) {
