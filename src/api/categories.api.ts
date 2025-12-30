@@ -25,7 +25,6 @@ export interface CreateCategoryPayload {
   imageFile?: File
   // Campos adicionales para edición
   id?: string
-  icon?: string
   status?: number
 }
 
@@ -95,10 +94,8 @@ function createFormData(payload: CreateCategoryPayload): FormData {
     formData.append("color", payload.color)
   }
   
-  if (payload.imageFile) {
+  if (payload.imageFile instanceof File) {
     formData.append("imageFile", payload.imageFile)
-  } else if (payload.icon) {
-    formData.append("icon", payload.icon)
   }
 
   if (payload.status !== undefined) {

@@ -181,11 +181,9 @@ export default function CategoryModal({
       payload.id = category.id
       payload.status = isActive ? 1 : 0
       
-      // Si hay nueva imagen, enviarla, sino enviar la URL actual
+      // Solo enviar imageFile si hay una nueva imagen
       if (imageFile) {
         payload.imageFile = imageFile
-      } else {
-        payload.icon = category.icon
       }
     } else {
       // Modo creación: imagen es obligatoria
