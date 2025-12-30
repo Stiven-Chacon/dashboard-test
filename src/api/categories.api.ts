@@ -25,7 +25,7 @@ export interface CreateCategoryPayload {
   imageFile?: File
 }
 
-const API_BASE_URL = "https://dev.api.bekindnetwork.com/api/v1"
+const API_BASE_URL = "/api/proxy"
 
 export const categoriesApi = {
   getList: async (
