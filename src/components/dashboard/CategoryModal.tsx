@@ -176,16 +176,28 @@ export default function CategoryModal({
       color: formatColorHex(color),
     }
 
-    // Agregar imagen si existe (nuevo archivo)
-    if (imageFile) {
-      payload.imageFile = imageFile
-    }
-
-    // Si es edición, agregar campos adicionales
     if (isEditMode) {
+      // Modo edición: enviar todos los campos
       payload.id = category.id
-      payload.icon = category.icon
       payload.status = isActive ? 1 : 0
+      
+      // Si hay nueva imagen, enviarla, sino enviar la URL actual
+      if (imageFile) {
+        payload.imageFile = imageFile
+      } else {
+        payload.icon = category.icon
+      }
+    } else {
+      // Modo creación: imagen es obligatoria
+      if (!imageFile) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          imageFile: "La imagen es obligatoria",
+        }))
+        return
+      }
+      payload.imageFile = imageFile
+      payload.status = 1 // Por defecto activo en creación
     }
 
     const result = await createCategory(payload)
@@ -407,25 +419,30 @@ export default function CategoryModal({
             </p>
           </div>
 
-          {/* Estado - Solo visible en modo edición */}
-          {isEditMode && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsActive(!isActive)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isActive ? "bg-blue-600" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isActive ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-              <span className="text-sm text-gray-700">Activo</span>
+          {/* Estado - Visible siempre */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <p className="text-xs text-gray-500">
+                {isActive ? "La categoría está activa" : "La categoría está inactiva"}
+              </p>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setIsActive(!isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isActive ? "bg-[#01BABB]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
